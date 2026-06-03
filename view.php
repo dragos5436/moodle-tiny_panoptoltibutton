@@ -29,8 +29,6 @@ if (empty($CFG)) {
     require_once(dirname(__FILE__) . '/../../../../../config.php');
 }
 
-require_login();
-
 require_once($CFG->dirroot . '/blocks/panopto/lib/block_panopto_lib.php');
 require_once($CFG->libdir . '/accesslib.php'); // Access control functions.
 require_once($CFG->dirroot . '/mod/lti/lib.php');
@@ -83,7 +81,6 @@ if ($contentverified) {
                 $courseid = $course->id;
                 $context = context_course::instance($cleancourseid);
                 $PAGE->set_context($context);
-                require_login($course, true);
             }
         }
     }
@@ -114,7 +111,15 @@ if ($contentverified) {
                 $config
             );
             exit;
+        } else {
+            unset($SESSION->lti_initiatelogin_status);
         }
+    }
+
+    if (!empty($courseid)) {
+        require_login($course, true);
+    } else {
+        require_login();
     }
 
     echo \panoptoblock_lti_utility::launch_tool($lti);

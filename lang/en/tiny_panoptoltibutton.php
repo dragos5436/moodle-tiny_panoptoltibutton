@@ -28,5 +28,6 @@ $string['modal_button_close'] = 'Close';
 $string['panopto_button_description'] = 'Add Panopto Video';
 $string['panopto_button_long_description'] = 'Add Panopto Video Content to TinyMCE';
 $string['panopto_button_unprovisioned_error'] = 'Error: Please use the Panopto Block to provision this course before using this tool';
+$string['panoptoltibutton:use'] = 'Use Panopto button';
 $string['pluginname'] = 'Add Panopto Video';
 $string['privacy:metadata'] = 'No user data is stored by this plugin';
