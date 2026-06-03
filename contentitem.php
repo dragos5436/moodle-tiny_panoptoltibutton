@@ -39,7 +39,6 @@ const LTI_TINY_PATH = '/lib/editor/tiny/plugins/panoptoltibutton/contentitem_ret
 
 // Check access and capabilities.
 $course = get_course($courseid);
-require_login($course);
 
 // LTI 1.3 login request.
 $config = lti_get_type_type_config($id);
@@ -61,8 +60,12 @@ if ($config->lti_ltiversion === LTI_VERSION_1P3) {
     if (!isset($SESSION->lti_initiatelogin_status)) {
         echo lti_initiate_login($courseid, "tiny_panoptoltibutton, {$callback}", $lti, $config);
         exit;
+    } else {
+        unset($SESSION->lti_initiatelogin_status);
     }
 }
+
+require_login($course);
 
 $context = context_course::instance($courseid);
 

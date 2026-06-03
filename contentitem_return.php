@@ -26,7 +26,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// phpcs:ignore moodle.Files.RequireLogin.Missing -- Login is enforced via tiny_panoptoltibutton_require_login_or_repost() below.
 require_once(dirname(__FILE__) . '/../../../../../config.php');
+require_once(dirname(__FILE__) . '/locallib.php');
 require_once($CFG->dirroot . '/blocks/panopto/lib/panopto_data.php');
 require_once($CFG->dirroot . '/blocks/panopto/lib/lti/panoptoblock_lti_utility.php');
 require_once($CFG->dirroot . '/mod/lti/lib.php');
@@ -37,7 +39,7 @@ $id = required_param('id', PARAM_INT);
 $callback = required_param('callback', PARAM_ALPHANUMEXT);
 $jwt = optional_param('JWT', '', PARAM_RAW);
 
-require_login($courseid);
+tiny_panoptoltibutton_require_login_or_repost($courseid);
 
 $context = context_course::instance($courseid);
 
