@@ -57,6 +57,7 @@ export const register = (editor) => {
     });
     registerOption(tool, {
         processor: "object",
+        default: {},
     });
     registerOption(wwwroot, {
         processor: "string",

@@ -36,7 +36,8 @@ export const getSetup = async() => {
     return (editor) => {
 
         // Only show button if we have external tool configured.
-        if (getTool(editor)) {
+        const tool = getTool(editor);
+        if (tool?.id) {
             // Register the Moodle SVG as an icon suitable for use as a TinyMCE toolbar button.
             editor.ui.registry.addIcon(icon, buttonImage.html);
 
