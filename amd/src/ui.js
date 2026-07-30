@@ -21,8 +21,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import Modal from 'tiny_panoptoltibutton/modal';
-import ModalFactory from 'core/modal_factory';
+import PanoptoModal from 'tiny_panoptoltibutton/modal';
 import
     {
         getCourseId,
@@ -72,8 +71,7 @@ const getTemplateContext = (editor, data) => {
 
 const displayDialogue = async (editor, data = {}) => {
     editor.focus(true);
-    const modal = await ModalFactory.create({
-        type: Modal.TYPE,
+    const modal = await PanoptoModal.create({
         templateContext: getTemplateContext(editor, data),
         large: true,
         scrollable: false,

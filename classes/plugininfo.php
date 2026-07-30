@@ -87,8 +87,10 @@ class plugininfo extends plugin implements
 
         $ltitool = \panoptoblock_lti_utility::get_course_tool($COURSE->id);
 
-        // Remove sensitive info from $config.
-        unset($ltitool->config['password'], $ltitool->config['servicesalt']);
+        if (!empty($ltitool)) {
+            // Remove sensitive info from $config.
+            unset($ltitool->config['password'], $ltitool->config['servicesalt']);
+        }
 
         $resourcebase = sha1(
             $PAGE->url->__toString() . '&' . $PAGE->course->sortorder
@@ -98,7 +100,7 @@ class plugininfo extends plugin implements
         return [
             // These will be mapped to a namespaced EditorOption in Tiny.
             'courseid' => $COURSE->id,
-            'tool' => !empty($ltitool) ? $ltitool : "",
+            'tool' => !empty($ltitool) ? $ltitool : new \stdClass(),
             'wwwroot' => $CFG->wwwroot,
             'contentitempath' => '/lib/editor/tiny/plugins/panoptoltibutton/contentitem.php',
             'resourcebase' => $resourcebase,

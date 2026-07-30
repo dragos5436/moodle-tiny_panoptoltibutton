@@ -25,21 +25,21 @@
 defined('MOODLE_INTERNAL') || die();
 
 // The current plugin version (Date: YYYYMMDDXX).
-$plugin->version = 2026060300;
+$plugin->version = 2026073000;
 
-// Requires this Moodle version - 4.1.0.
-$plugin->requires = 2022112800;
+// Requires this Moodle version - 4.5.0.
+$plugin->requires = 2024100700;
 
 // Full name of the plugin (used for diagnostics).
 $plugin->component = 'tiny_panoptoltibutton';
 
 // Supported versions.
 $plugin->supported = [
-    // Support from the Moodle 4.1 series.
-    401,
+    // Support from the Moodle 4.5 series.
+    405,
 
-    // To the Moodle 5.1 series.
-    501,
+    // To the Moodle 5.2 series.
+    502,
 ];
 
 // This is considered ready for production sites.
