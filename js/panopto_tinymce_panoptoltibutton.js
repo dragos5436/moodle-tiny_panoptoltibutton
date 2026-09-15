@@ -81,124 +81,33 @@ var panopto_tinymce_panoptoltibutton = {
 
     EmbeddedContentRenderingStrategy: function (item, course, resourceLinkId, tool, wwwroot) {
 
-        var mimeTypePieces = item.mediaType.split("/"),
-            mimeTypeType = mimeTypePieces[0],
-            defaultHeight = "250px",
-            defaultThumbnailWidth = 128,
-            defaultThumbnailHeight = 72,
-            titleHeight = defaultThumbnailHeight,
-            titleWidth = null,
-            textHeight = (parseInt(defaultHeight) - parseInt(defaultThumbnailHeight)) + "px",
-            TEMPLATES,
-            content;
+        var launchUrl = wwwroot
+                + '/lib/editor/tiny/plugins/panoptoltibutton/view.php?course='
+                + encodeURIComponent(course)
+                + '&ltitypeid=' + encodeURIComponent(tool.id)
+                + '&resourcelinkid=' + encodeURIComponent(resourceLinkId)
+                + '&custom=' + encodeURIComponent(JSON.stringify(item.custom || {}));
 
-        // In this case there is no text/html being sent, just a title and possible thumbnail, reduce height.
-        if (!item.text || !item.text.length) {
-            defaultHeight = defaultThumbnailHeight + "px";
+        if (item.url) {
+            launchUrl += '&contenturl=' + encodeURIComponent(item.url);
         }
 
-        if (!item.displayHeight) {
-            item.displayHeight = defaultHeight;
-        }
+        // Store a safe, local launch marker instead of an iframe. Moodle's normal
+        // HTML purification preserves this link while editing and displaying it.
+        var title = Handlebars.escapeExpression(item.title || 'Panopto content');
+        var href = Handlebars.escapeExpression(launchUrl);
+        var contentUrl = item.url ? Handlebars.escapeExpression(item.url) : '';
+        var target = item.placementAdvice && item.placementAdvice.windowTarget
+            ? Handlebars.escapeExpression(item.placementAdvice.windowTarget)
+            : '_blank';
 
-        var thumbnailId = '';
-        if (item.thumbnail) {
-            if (!item.thumbnail.width) {
-                item.thumbnail.width = defaultThumbnailWidth;
-            }
-
-            if (!item.thumbnail.height) {
-                item.thumbnail.height = defaultThumbnailHeight;
-            }
-
-            if (item.displayWidth) {
-                // The extra 5px is for a margin to the right of the thumbnail
-                titleWidth = (parseInt(item.displayWidth) - parseInt(item.thumbnail.width) - 5) + "px";
-            }
-
-            titleHeight = parseInt(item.thumbnail.height) + "px";
-
-            // LTI 1.3 sends thumbnail id as @id.
-            thumbnailId = item.thumbnail.id ? item.thumbnail.id : item.thumbnail["@id"];
-        }
-
-
-        TEMPLATES = {
-            ltiLink: Handlebars.compile('<iframe src="{{wwwroot}}/lib/editor/tiny/plugins/panoptoltibutton/view.php?custom={{custom}}&'
-                + 'course={{course}}&ltitypeid={{toolid}}&resourcelinkid={{resourcelinkid}}'
-                + '{{#if item.url}}&contenturl={{item.url}}{{/if}}'
-                + '" '
-                + '{{#if item.placementAdvice.width}} width="{{item.placementAdvice.displayWidth}}"{{/if}} '
-                + '{{#if item.placementAdvice.height}} height="{{item.placementAdvice.displayHeight}}"{{/if}} '
-                + 'allowfullscreen="true" '
-                + '/>'
-            ),
-            link: Handlebars.compile('<div style="'
-                        + (item.displayWidth ? 'width:{{item.displayWidth}};' : '')
-                        + 'height:{{titleHeight}};">'
-                        + '<a href="{{wwwroot}}/lib/editor/tiny/plugins/panoptoltibutton/view.php?custom={{custom}}&'
-                        + 'course={{course}}&ltitypeid={{toolid}}&resourcelinkid={{resourcelinkid}}'
-                        + '{{#if item.url}}&contenturl={{item.url}}{{/if}}'
-                        + '" '
-                        + '{{#if item.placementAdvice.windowTarget}}target="{{item.placementAdvice.windowTarget}}" {{/if}}'
-                        + '>'
-                            + '{{#if item.thumbnail}}'
-                            + '<img src={{thumbnailId}} alt="content thumbnail"'
-                            + 'style="float:left;margin-right:5px;'
-                            + 'width:{{item.thumbnail.width}}px;'
-                            + 'height:{{item.thumbnail.height}}px;'
-                            + '" /> '
-                            + '{{/if}}'
-                            + '<div style="float:left;font-size:20px;font-weight:bold;'
-                            + (item.titleWidth ? 'width:{{titleWidth}};' : '')
-                            + 'height:{{titleHeight}};line-height:{{titleHeight}};">'
-                            + '{{item.title}}'
-                            + '</div>'
-                        + '</a>'
-                    + '</div>'
-                    + '{{#if item.text}}'
-                    + '<div style="'
-                    + (item.displayWidth ? 'width:{{item.displayWidth}};' : '')
-                    + 'min-height:{{textHeight}};"></span>{{item.text}}</span></div>'
-                    + '{{/if}}'
-            )
-        };
-
-        // Remove backslashes for the LTI 1.3
-        mimeTypeType = mimeTypeType.replace(/\\/g, "");
-        switch (mimeTypeType) {
-            case 'application':
-                if (mimeTypePieces[1] === 'vnd.ims.lti.v1.ltilink') {
-
-                    content = TEMPLATES.ltiLink({
-                        wwwroot: wwwroot,
-                        item: item,
-                        toolid: tool.id,
-                        resourcelinkid: resourceLinkId,
-                        course: course,
-                    });
-                }
-                else {
-                    alert('Unsupported application subtype');
-                }
-                break;
-            case 'text':
-                content = TEMPLATES.link({
-                    wwwroot: wwwroot,
-                    item: item,
-                    custom: encodeURIComponent(JSON.stringify(item.custom)),
-                    course: course,
-                    toolid: tool.id,
-                    resourcelnkid: resourceLinkId,
-                    textHeight: textHeight,
-                    titleHeight: titleHeight,
-                    titleWidth: titleWidth,
-                    thumbnailId: thumbnailId,
-                });
-                break;
-            default:
-                alert('Unsupported type');
-        }
+        var content = '<a class="panopto-embed" data-panopto-embed="1"'
+                + ' data-panopto-course-id="' + Handlebars.escapeExpression(course) + '"'
+                + ' data-panopto-lti-type-id="' + Handlebars.escapeExpression(tool.id) + '"'
+                + ' data-panopto-resource-link-id="' + Handlebars.escapeExpression(resourceLinkId) + '"'
+                + (contentUrl ? ' data-panopto-content-url="' + contentUrl + '"' : '')
+                + ' href="' + href + '" target="' + target + '" rel="noopener">'
+                + title + '</a>';
 
         this.toHtml = function () {
             return content;
@@ -226,14 +135,14 @@ var panopto_tinymce_panoptoltibutton = {
             ? item.placementAdvice.displayHeight
             : item.iframe?.height;
 
-        template = Handlebars.compile('<iframe src="{{wwwroot}}/lib/editor/tiny/plugins/panoptoltibutton/view.php?course={{courseId}}'
+        template = Handlebars.compile('<a class="panopto-embed" data-panopto-embed="1" href="{{wwwroot}}/lib/editor/tiny/plugins/panoptoltibutton/view.php?course={{courseId}}'
                 + '&ltitypeid={{ltiTypeId}}&custom={{custom}}'
                 + '{{#if item.useCustomUrl}}&contenturl={{item.url}}{{/if}}'
-                + '&resourcelinkid={{resourcelinkid}}" '
-                + ' {{#if displayWidth}}width="{{displayWidth}}" {{/if}}'
-                + ' {{#if displayHeight}}height="{{displayHeight}}" {{/if}}'
-                + 'allowfullscreen="true" '
-                + '></iframe>'
+                + '&resourcelinkid={{resourcelinkid}}" target="_blank" rel="noopener"'
+                + ' data-panopto-course-id="{{courseId}}"'
+                + ' data-panopto-lti-type-id="{{ltiTypeId}}"'
+                + ' data-panopto-resource-link-id="{{resourcelinkid}}"'
+                + '>Panopto content</a>'
                 );
 
         this.toHtml = function () {
