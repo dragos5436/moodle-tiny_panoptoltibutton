@@ -31,13 +31,37 @@
  */
 
 var panopto_tinymce_panoptoltibutton = {
-    buildLaunchUrl: function (item, course, resourceLinkId, tool, wwwroot) {
+    getItemTitle: function (item) {
+        var title = item.title || item.name || item.label || item.text;
+        if (!title) {
+            return 'Panopto content';
+        }
+
+        return String(title).replace(/<[^>]*>/g, '').trim() || 'Panopto content';
+    },
+
+    encodeCustomData: function (custom) {
+        var json = JSON.stringify(custom || {});
+        return btoa(unescape(encodeURIComponent(json)))
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+    },
+
+    buildLaunchUrl: function (item, course, resourceLinkId, tool, wwwroot, safePayload) {
         var params = [
             'course=' + encodeURIComponent(course),
             'ltitypeid=' + encodeURIComponent(tool.id),
-            'custom=' + encodeURIComponent(JSON.stringify(item.custom || {})),
             'resourcelinkid=' + encodeURIComponent(resourceLinkId),
         ];
+
+        if (safePayload) {
+            params.splice(2, 0, 'custom_b64='
+                + panopto_tinymce_panoptoltibutton.encodeCustomData(item.custom));
+        } else {
+            params.splice(2, 0, 'custom='
+                + encodeURIComponent(JSON.stringify(item.custom || {})));
+        }
 
         if (item.url) {
             params.push('contenturl=' + encodeURIComponent(item.url));
@@ -96,19 +120,22 @@ var panopto_tinymce_panoptoltibutton = {
         };
     },
 
-    EmbeddedContentRenderingStrategy: function (item, course, resourceLinkId, tool, wwwroot) {
+    EmbeddedContentRenderingStrategy: function (item, course, resourceLinkId, tool, wwwroot, safePayload) {
 
         var launchUrl = panopto_tinymce_panoptoltibutton.buildLaunchUrl(
             item,
             course,
             resourceLinkId,
             tool,
-            wwwroot
+            wwwroot,
+            safePayload
         );
 
         // Store a safe, local launch marker instead of an iframe. Moodle's normal
         // HTML purification preserves this link while editing and displaying it.
-        var title = Handlebars.escapeExpression(item.title || 'Panopto content');
+        var title = Handlebars.escapeExpression(
+            panopto_tinymce_panoptoltibutton.getItemTitle(item)
+        );
         var href = Handlebars.escapeExpression(launchUrl);
         var contentUrl = item.url ? Handlebars.escapeExpression(item.url) : '';
         var target = item.placementAdvice && item.placementAdvice.windowTarget
@@ -130,7 +157,7 @@ var panopto_tinymce_panoptoltibutton = {
     },
 
     IframeRenderingStrategy: function (item, course,
-            resourceLinkId, tool, wwwroot) {
+            resourceLinkId, tool, wwwroot, safePayload) {
 
         // If the item URL is the same as the LTI Launch URL (or Content-Item request), we assume we need
         // to make an LTI Launch request.
@@ -144,11 +171,19 @@ var panopto_tinymce_panoptoltibutton = {
             course,
             resourceLinkId,
             tool,
-            wwwroot
+            wwwroot,
+            safePayload
         );
-        var title = Handlebars.escapeExpression(item.title || 'Panopto content');
+        var title = Handlebars.escapeExpression(
+            panopto_tinymce_panoptoltibutton.getItemTitle(item)
+        );
 
         this.toHtml = function () {
+            if (!safePayload) {
+                return '<iframe src="' + Handlebars.escapeExpression(launchUrl)
+                    + '" allowfullscreen="true"></iframe>';
+            }
+
             return '<a class="panopto-embed" data-panopto-embed="1"'
                 + ' data-panopto-course-id="' + Handlebars.escapeExpression(course) + '"'
                 + ' data-panopto-lti-type-id="' + Handlebars.escapeExpression(tool.id) + '"'

@@ -24,7 +24,9 @@
             resourceLinkId = createResourceLinkIdPanoptoTinymceLTI(getHashValue('resourcebase')),
             unprovisionederror = decodeURIComponent(getHashValue('unprovisionerror')),
             wwwroot = decodeURIComponent(getHashValue('wwwroot')),
-            contentitempath = decodeURIComponent(getHashValue('contentitempath'));
+        contentitempath = decodeURIComponent(getHashValue('contentitempath')),
+        editorId = window.parent.tinyMCE.activeEditor.id,
+        safePayload = /(?:^|_)onlinetext_editor$|(?:^|_)assignfeedbackcomments_editor$/.test(editorId);
 
         $(document).ready(function () {
             document.CALLBACKS = {
@@ -44,7 +46,14 @@
                 for (var i = 0; i < contentItemData['@graph'].length; i++) {
                     var item = contentItemData['@graph'][i];
                     var strategyFactory = new panopto_tinymce_panoptoltibutton.PlacementStrategyFactory();
-                    var strategy = strategyFactory.strategyFor(item, courseid, resourceLinkId, tool, wwwroot);
+                    var strategy = strategyFactory.strategyFor(
+                        item,
+                        courseid,
+                        resourceLinkId,
+                        tool,
+                        wwwroot,
+                        safePayload
+                    );
                     var render = strategy.toHtml;
                     window.parent.tinyMCE.activeEditor.execCommand('mceInsertContent', 0, render(item));
                 }

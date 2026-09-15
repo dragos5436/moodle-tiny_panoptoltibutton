@@ -38,6 +38,7 @@ require_once($CFG->dirroot . '/blocks/panopto/lib/lti/panoptoblock_lti_utility.p
 $configuredserverarray = panopto_get_configured_panopto_servers();
 
 $contenturl = optional_param('contenturl', '', PARAM_URL);
+$customb64 = optional_param('custom_b64', '', PARAM_ALPHANUMEXT);
 
 $contentverified = false;
 
@@ -58,6 +59,13 @@ if ($contentverified) {
     $resourcelinkid = required_param('resourcelinkid', PARAM_ALPHANUMEXT);
     $ltitypeid = required_param('ltitypeid', PARAM_INT);
     $customdata = optional_param('custom', '', PARAM_RAW_TRIMMED);
+    if ($customb64 !== '') {
+        $decodedcustom = base64_decode(strtr($customb64, '-_', '+/'), true);
+        if ($decodedcustom === false) {
+            throw new moodle_exception('invalidparameter', 'error', '', 'custom_b64');
+        }
+        $customdata = $decodedcustom;
+    }
 
     // Make sure $ltitypeid is valid.
     $ltitype = $DB->get_record('lti_types', ['id' => $ltitypeid], '*', MUST_EXIST);
