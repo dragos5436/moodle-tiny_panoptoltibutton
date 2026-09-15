@@ -31,6 +31,23 @@
  */
 
 var panopto_tinymce_panoptoltibutton = {
+    buildLaunchUrl: function (item, course, resourceLinkId, tool, wwwroot) {
+        var params = [
+            'course=' + encodeURIComponent(course),
+            'ltitypeid=' + encodeURIComponent(tool.id),
+            'custom=' + encodeURIComponent(JSON.stringify(item.custom || {})),
+            'resourcelinkid=' + encodeURIComponent(resourceLinkId),
+        ];
+
+        if (item.url) {
+            params.push('contenturl=' + encodeURIComponent(item.url));
+        }
+
+        return wwwroot
+            + '/lib/editor/tiny/plugins/panoptoltibutton/view.php?'
+            + params.join('&');
+    },
+
     PlacementStrategyFactory: function () {
         this.strategyFor = function (item, course, resourceLinkId, tool, wwwroot) {
 
@@ -81,16 +98,13 @@ var panopto_tinymce_panoptoltibutton = {
 
     EmbeddedContentRenderingStrategy: function (item, course, resourceLinkId, tool, wwwroot) {
 
-        var launchUrl = wwwroot
-                + '/lib/editor/tiny/plugins/panoptoltibutton/view.php?course='
-                + encodeURIComponent(course)
-                + '&ltitypeid=' + encodeURIComponent(tool.id)
-                + '&resourcelinkid=' + encodeURIComponent(resourceLinkId)
-                + '&custom=' + encodeURIComponent(JSON.stringify(item.custom || {}));
-
-        if (item.url) {
-            launchUrl += '&contenturl=' + encodeURIComponent(item.url);
-        }
+        var launchUrl = panopto_tinymce_panoptoltibutton.buildLaunchUrl(
+            item,
+            course,
+            resourceLinkId,
+            tool,
+            wwwroot
+        );
 
         // Store a safe, local launch marker instead of an iframe. Moodle's normal
         // HTML purification preserves this link while editing and displaying it.
@@ -118,8 +132,6 @@ var panopto_tinymce_panoptoltibutton = {
     IframeRenderingStrategy: function (item, course,
             resourceLinkId, tool, wwwroot) {
 
-        var template;
-
         // If the item URL is the same as the LTI Launch URL (or Content-Item request), we assume we need
         // to make an LTI Launch request.
         if (   item.url !== tool.baseurl
@@ -127,35 +139,23 @@ var panopto_tinymce_panoptoltibutton = {
             item.useCustomUrl = true;
         }
 
-        let displayWidth = item.placementAdvice?.displayWidth
-            ? item.placementAdvice.displayWidth
-            : item.iframe?.width;
-
-        let displayHeight = item.placementAdvice?.displayHeight
-            ? item.placementAdvice.displayHeight
-            : item.iframe?.height;
-
-        template = Handlebars.compile('<a class="panopto-embed" data-panopto-embed="1" href="{{wwwroot}}/lib/editor/tiny/plugins/panoptoltibutton/view.php?course={{courseId}}'
-                + '&ltitypeid={{ltiTypeId}}&custom={{custom}}'
-                + '{{#if item.useCustomUrl}}&contenturl={{item.url}}{{/if}}'
-                + '&resourcelinkid={{resourcelinkid}}" target="_blank" rel="noopener"'
-                + ' data-panopto-course-id="{{courseId}}"'
-                + ' data-panopto-lti-type-id="{{ltiTypeId}}"'
-                + ' data-panopto-resource-link-id="{{resourcelinkid}}"'
-                + '>Panopto content</a>'
-                );
+        var launchUrl = panopto_tinymce_panoptoltibutton.buildLaunchUrl(
+            item,
+            course,
+            resourceLinkId,
+            tool,
+            wwwroot
+        );
+        var title = Handlebars.escapeExpression(item.title || 'Panopto content');
 
         this.toHtml = function () {
-            return template({
-                wwwroot: wwwroot,
-                item: item,
-                custom: JSON.stringify(item.custom),
-                courseId: course,
-                resourcelinkid: resourceLinkId,
-                ltiTypeId: tool.id,
-                displayHeight: displayHeight,
-                displayWidth: displayWidth,
-            });
+            return '<a class="panopto-embed" data-panopto-embed="1"'
+                + ' data-panopto-course-id="' + Handlebars.escapeExpression(course) + '"'
+                + ' data-panopto-lti-type-id="' + Handlebars.escapeExpression(tool.id) + '"'
+                + ' data-panopto-resource-link-id="' + Handlebars.escapeExpression(resourceLinkId) + '"'
+                + ' href="' + Handlebars.escapeExpression(launchUrl)
+                + '" target="_blank" rel="noopener">'
+                + title + '</a>';
         };
     }
 };
